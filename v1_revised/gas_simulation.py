@@ -63,7 +63,7 @@ class Environment:
         elif particle.y < particle.size:
             particle.y = 2*particle.size - particle.y
             particle.angle = math.pi - particle.angle
-            
+
     # Create a new particle
     # LM: 'kwargs' is the standard name
     def addParticles(self, n=1, **kargs):
@@ -92,14 +92,44 @@ class Environment:
 
         # LM: 'for p in self.particles:' if you want only particles,
         #     'for i, p in enumerate(self.particles):' if you want both id and the particle
-        for p in self.particles:
+        for i, p in enumerate(self.particles):
             # move particle
             p.move()
             # check collisions with borders
             self.bounce(p)
+            # check collisions between all particles
+            for p2 in self.particles[i+1:]:
+                self.collide(p, p2)
 
     def draw(self,screen):
          for p in self.particles:
             p.drawCircle(screen)
     
+    def collide(self,p1,p2):
+        # define difference
+        dx = p1.x - p2.x
+        dy = p1.y - p2.y
     
+        # calculate the size of a vector sqrt(dx**2+dy**2)
+        distance = math.hypot(dx, dy)
+        # check if there is a contact 
+        if distance <= p1.size + p2.size:
+            tangent = math.atan2(dy, dx)
+            # calculate new angle
+            p1.angle = 2 * tangent - p1.angle
+            p2.angle = 2 * tangent - p2.angle
+            # change speed (assumming all energy transforms)
+            (p1.speed, p2.speed) = (p2.speed, p1.speed)
+            # correction (particles goes to indefinite loop)
+            # step by step simulation, collisions are not verified
+            # in the real time
+            angle = 0.5* math.pi + tangent
+            # sligtly move the x, y coordinates in case the particles are overlapping
+            p1.x += math.sin(angle)
+            p1.y -= math.cos(angle)
+            p2.x -= math.sin(angle)
+            p2.y += math.cos(angle)
+
+
+
+
