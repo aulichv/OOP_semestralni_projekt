@@ -1,7 +1,8 @@
+
 import pygame as pg
 import random
 import math
-import config
+
 
 class Particle:
     def __init__(self, x, y, size):
@@ -19,18 +20,13 @@ class Particle:
             #random.randint(-100, 100), random.randint(-100, 100))
         self.speed = 0
         self.angle = 0
-        self.v = 0
 
     def move(self):
         # timestep, per default time_step from config
-        self.dT = 10
+        self.dT = 1
         # change x, y coordinates
-        # vector_velocity(vx,vy)
-        #self.vector_velocity = pg.math.Vector2(math.sin(self.angle) * self.speed, math.cos(self.angle) * self.speed)
-        #self.x += math.sin(self.angle) * self.speed * self.dT
-        #self.y -= math.cos(self.angle) * self.speed * self.dT
-        self.x += self.dT * self.v[0]
-        self.y -= self.dT * self.v[1]
+        self.x += math.sin(self.angle) * self.speed * self.dT
+        self.y -= math.cos(self.angle) * self.speed * self.dT
 
     def drawCircle(self,screen):
         pg.draw.circle(screen, self.color, (self.x, self.y), self.size, self.thickness)
@@ -53,7 +49,7 @@ class Environment:
         # right border
         # LM: careful about width vs self.width
         # right border
-        '''if particle.x > self.width - particle.size:
+        if particle.x > self.width - particle.size:
             particle.x = 2*(self.width - particle.size) - particle.x
             particle.angle = - particle.angle
         # left border
@@ -67,18 +63,7 @@ class Environment:
         # ceiling
         elif particle.y < particle.size:
             particle.y = 2*particle.size - particle.y
-            particle.angle = math.pi - particle.angle'''
-        if particle.x > self.width - particle.size:
-            particle.v = pg.math.Vector2(-particle.v[0], particle.v[1])
-        # left border
-        elif particle.x < particle.size:
-            particle.v = pg.math.Vector2(-particle.v[0], particle.v[1])
-        # floor
-        if particle.y > self.height - particle.size:
-            particle.v = pg.math.Vector2(particle.v[0], -particle.v[1])
-        # ceiling
-        elif particle.y < particle.size:
-            particle.v = pg.math.Vector2(particle.v[0], -particle.v[1])
+            particle.angle = math.pi - particle.angle
 
     # Create a new particle
     # LM: 'kwargs' is the standard name
@@ -98,10 +83,8 @@ class Environment:
                 #random.randint(10, 100), random.randint(10, 100)))
             # set particle color
             particle.color = kargs.get('color', (0, 0, 255))
-            # random float between 0-1
-            particle.speed = kargs.get('speed', random.random())
+            particle.speed = kargs.get('speed', random.uniform(1,5))
             particle.angle = kargs.get('angle', random.uniform(0, math.pi*2))
-            particle.v = pg.math.Vector2(math.sin(particle.angle) * particle.speed, math.cos(particle.angle) * particle.speed)
             # add instance of particle to list of particles
             self.particles.append(particle)
 
@@ -131,34 +114,28 @@ class Environment:
         # calculate the size of a vector sqrt(dx**2+dy**2)
         distance = math.hypot(dx, dy)
         # check if there is a contact 
-        if distance <= p1.size + p2.size:
-            (p1.v, p2.v) = (p2.v, p1.v)
-            print(p1.v, p2.v)
-            #tangent = math.atan2(dy, dx)
+        if distance < p1.size + p2.size:
+            overlap = (p1.size + p2.size) - distance
+            tangent = math.atan2(dy, dx)
+            angle = 0.5* math.pi + tangent
+            
+            
             # calculate new angle
-            #p1.angle = 2 * tangent - p1.angle
-            #p2.angle = 2 * tangent - p2.angle
+            p1.angle = 2 * tangent - p1.angle
+            p2.angle = 2 * tangent - p2.angle
             # change speed (assumming all energy transforms)
-            #(p1.speed, p2.speed) = (p2.speed, p1.speed)
+            (p1.speed, p2.speed) = (p2.speed, p1.speed)
             # correction (particles goes to indefinite loop)
             # step by step simulation, collisions are not verified
             # in the real time
-            #angle = 0.5* math.pi + tangent
-            # sligtly move the x, y coordinates in case the particles are overlapping
-            #overlap = (p1.size + p2.size) - distance
-            #if overlap > 0:
-                #p1.x += math.sin(p1.angle)*overlap
-                #p1.y -= math.cos(p1.angle)*overlap
-                #p2.x += math.sin(p2.angle)*overlap
-                #p2.y -= math.cos(p2.angle)*overlap
-            '''overlap = (p1.size + p2.size) - math.hypot(dx, dy) 
             if overlap >= 0:
-                p1.x += math.sin(angle)*overlap
-                p1.y -= math.cos(angle)*overlap
-                p2.x += math.sin(angle)*overlap
-                p2.y -= math.cos(angle)*overlap'''
-
-
-
-
-
+                p1.x += math.sin(angle)*(overlap)
+                p1.y -= math.cos(angle)*(overlap)
+                p2.x -= math.sin(angle)*(overlap)
+                p2.y += math.cos(angle)*(overlap)
+            '''angle = 0.5* math.pi + tangent
+            # sligtly move the x, y coordinates in case the particles are overlapping
+            p1.x += math.sin(angle)
+            p1.y -= math.cos(angle)
+            p2.x -= math.sin(angle)
+            p2.y += math.cos(angle)'''
