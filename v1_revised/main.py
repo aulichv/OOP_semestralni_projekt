@@ -4,6 +4,7 @@ import config
 
 TIMEEVENT = pg.USEREVENT + 1
 
+# Properties import from config file
 def main():
     # window caption
     pg.display.set_caption(config.caption)
@@ -29,22 +30,15 @@ def main():
                 env.update()
                 env.draw(screen)
             if event.type == pg.KEYDOWN:
+                # space pause the simulation
                 if event.key == pg.K_SPACE:
-                    pause = True
-        while pause:
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    # close the window
-                    running = False
-                    pause = False
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_SPACE:
-                        pause = False
+                    # negate state of pause
+                    pause = not pause
+                    # pause the timer of a simulation
+                    pg.time.set_timer(TIMEEVENT, config.time_step if not pause else 0)
                 
-        
+        # pygame display
         pg.display.flip()
 
-
 if __name__ == '__main__':
-    # LM: sorry, had to. Nice job so far!
     main()
